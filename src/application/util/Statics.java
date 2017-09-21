@@ -38,4 +38,12 @@ public class Statics {
 		public static String INPUT = "placas.xlsx";
 		public static String OUTPUT = "base.xlsx";
 	}
+	
+	public static class Connection{
+		public static int TIMEOUT = 20000;
+		public static int ATTEMPTS = 2;
+		public static long DELAY_WD = (long)12000;
+		public static long PERIOD_WD = (long)10000;
+		public static int REPEAT_WD = 1;
+	}
 }

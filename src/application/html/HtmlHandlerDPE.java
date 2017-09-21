@@ -18,6 +18,7 @@ import application.Main;
 import application.api.GenericHttp;
 import application.controller.MainController;
 import application.handlers.IHtmlHandler;
+import application.util.Statics;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -26,8 +27,9 @@ import javafx.scene.control.Alert.AlertType;
 public class HtmlHandlerDPE extends IHtmlHandler{
 	
 	public  HtmlHandlerDPE(){
-		this.name = "DETRAN (PE)";
+		this.name = "DETRAN-PE";
 		this.site = "http://online9.detran.pe.gov.br/ServicosWeb/Veiculo/frmConsultaPlaca.aspx";
+		this.site2 = "http://www.detran.pe.gov.br/index.php?option=com_content&amp;view=article&amp;id=396&amp;Itemid=15";
 		this.requestProperties.put("Content-Type", "application/x-www-form-urlencoded");
 	}
 	
@@ -45,13 +47,15 @@ public class HtmlHandlerDPE extends IHtmlHandler{
 						restricoes+=rest;
 					else{
 						//finish
-						restricoes = restricoes.substring(0,  restricoes.length()-2);
+						if(restricoes.contains(", "))
+							restricoes = restricoes.substring(0,  restricoes.length()-2);
 						break;
 					}
 				}
 				else{
 					//finish
-					restricoes = restricoes.substring(0,  restricoes.length()-2);
+					if(restricoes.contains(", "))
+						restricoes = restricoes.substring(0,  restricoes.length()-2);
 					break;
 				}
 			}
@@ -84,7 +88,7 @@ public class HtmlHandlerDPE extends IHtmlHandler{
 			info += "CHASSI: "+chassi+"\n";
 			info += "ESPECIE: "+especie+"\n";
 			info += "CATEGORIA: "+categoria;
-			return new Object[]{car, info, site};
+			return new Object[]{car, info, site2};
 		}
 		catch(Exception ex){
 			if(Main.DEBUG)
@@ -98,11 +102,11 @@ public class HtmlHandlerDPE extends IHtmlHandler{
 		}
 		//Parse failed but results may be found
 		//return just the car and site
-		return new Object[]{car, "Placa encontrada no seguinte site --->", site};
+		return new Object[]{car, htmlString/*"Placa encontrada no site "+name+" --->"*/, site2};
 	}
 	
 	@Override
-	public void connect(final String car){
+	public void connect(final String car, final int countDown){
 		this.params = new HashMap<String, Object>();
 		this.params.put("placa", car);
 		try {
@@ -111,33 +115,39 @@ public class HtmlHandlerDPE extends IHtmlHandler{
 			for(Map.Entry<String, String> entry : requestProperties.entrySet()){
 				request.addHeader(entry.getKey(), entry.getValue());
 	        }
-			request.setRequestTimeout(30000);
+			request.setRequestTimeout(Statics.Connection.TIMEOUT);
 			request.execute(new AsyncCompletionHandler<Response>(){
 			    
 			    @Override
 			    public Response onCompleted(Response response) throws Exception{
-			    	String htmlString = new String(response.getResponseBodyAsBytes(), "UTF-8");
-			    	if(htmlString.isEmpty() || htmlString.contains("Veículo não pertence a PE e sem débitos a pagar!")
-							|| htmlString.contains("Ocorreu um problema na sua consulta, tente novamente(2)!"))
-						MainController.getInstance().receiveData(new Object[]{car, "", ""});
-					else
-						MainController.getInstance().receiveData(parse(htmlString, car));
+			    	isOffline = false;
+			    	if(response.getStatusCode()==200){
+				    	String htmlString = new String(response.getResponseBodyAsBytes(), "UTF-8");
+				    	if(htmlString.isEmpty() || htmlString.contains("Veículo não pertence a PE e sem débitos a pagar!")
+								|| htmlString.contains("Ocorreu um problema na sua consulta, tente novamente(2)!"))
+							MainController.getInstance().receiveData(new Object[]{car, "", ""});
+						else
+							MainController.getInstance().receiveData(parse(htmlString, car));
+			    	}else{
+			    		connect(car, countDown-1);
+			    	}
 			        return response;
 			    }
 			    
 			    @Override
 			    public void onThrowable(Throwable t){
-			        if(Main.DEBUG)
-			        	System.out.print("Error connecting for "+car);
-			        MainController.getInstance().receiveData(new Object[]{car, "", ""});
+			        if(countDown>1){
+				        if(Main.DEBUG)
+				        	System.out.println("DPE try again "+car);
+			        	connect(car, countDown-1);
+			        }
+			        else{
+				        if(Main.DEBUG)
+				        	System.out.println("DPE error "+car);
+				        MainController.getInstance().receiveData(new Object[]{car, "", ""});
+			        }
 			    }
 			});
-			
-			/*String htmlString = GenericHttp.connect(url, "POST", requestProperties, params, false);
-			//Don't parse empty results:
-			if(htmlString.isEmpty() || htmlString.contains("Não foram encontrados registros com os dados informados."))
-				return null;
-			return parse(htmlString);*/
 		} catch (Exception e) {
 			if(Main.DEBUG)
 				e.printStackTrace();

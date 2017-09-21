@@ -69,7 +69,7 @@ public final class ExcelHandler {
             workbook.write(outputStream);
             workbook.close();
             if(Main.DEBUG)
-        		System.out.println("Success :)");
+        		System.out.println("Excell Creation Success :)");
             return;
         } catch (Exception e) {
         	if(Main.DEBUG)
@@ -81,7 +81,8 @@ public final class ExcelHandler {
 				}
 			});
         }
-        System.out.println("Failed :(");
+        if(Main.DEBUG)
+        	System.out.println("Excell Creation Failed :(");
 	}
 	
 	public static List<String> read(String fPath){
@@ -101,8 +102,8 @@ public final class ExcelHandler {
                     String value = currentCell.getStringCellValue();
                     if(value.contains("PLACA"))
                     	break;
-                    if(Main.DEBUG)
-    	        		System.out.println(value);
+                    //if(Main.DEBUG)
+    	        		//System.out.println(value);
                     result.add(value.toUpperCase().trim());
                     break; //just get first column!
                 }

@@ -78,7 +78,7 @@ public class Main extends Application {
 			//primaryStage.setMaximized(true);
 			//primaryStage.setFullScreen(true);
 			primaryStage.setTitle("Consulta de Placas");
-			//primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("logo.png")));
+			primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("logo.png")));
             primaryStage.show();           
 			
             

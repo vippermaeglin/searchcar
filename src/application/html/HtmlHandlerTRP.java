@@ -2,10 +2,16 @@ package application.html;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import org.asynchttpclient.AsyncCompletionHandler;
+import org.asynchttpclient.BoundRequestBuilder;
+import org.asynchttpclient.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -13,69 +19,87 @@ import org.jsoup.select.Elements;
 
 import application.Main;
 import application.api.GenericHttp;
+import application.controller.MainController;
 import application.handlers.IHtmlHandler;
+import application.util.Statics;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Alert.AlertType;
 
 public class HtmlHandlerTRP extends IHtmlHandler{
+
+	private String sessionId;
 	
 	public  HtmlHandlerTRP(){
-		this.name = "RIBEIRÃO PRETO (SP)";
+		this.name = "RIB. PRETO-SP";
 		this.site = "http://www.coderp.com.br/JW07/veiculoPatio.xhtml";
+		this.site2 = "http://www.coderp.com.br/JW07/veiculoPatio.xhtml";
+		this.sessionId = "";
 		this.requestProperties.put("Content-Type", "application/x-www-form-urlencoded");
 	}
 	
 	@Override
 	protected Object[] parse(String htmlString, String car){
-		try{
-			Document html = Jsoup.parse(htmlString);
-			//get first table:
-			Element table = html.select("table").get(0); 
-			Elements rows = table.select("tr");
-			//get data on second row:
-			Elements data = rows.get(1).select("td");
-			String nameOwner = data.get(0).text();
-			String name = "";
-			String owner = "";
-			int index = nameOwner.indexOf("/");
-			if(index != -1){
-				name = nameOwner.substring(0, index);
-				owner = nameOwner.substring(index+1, nameOwner.length());
-			}
-			else{
-				name = nameOwner;
-				owner = "";
-			}
-			String date = data.get(1).text();
-			String local = data.get(2).text();
-			String address = data.get(3).text();
-			String value = data.get(4).text();
-			if(Main.DEBUG)
-	    		System.out.println("DETRAN PARSE:");
-			if(Main.DEBUG)
-	    		System.out.println("Nome: "+name+" Proprietário: "+owner+" Data: "+date+" Pátio: "+local+" Endereço: "+address+" Valor: "+value);
-			//"PLACA", "EMPRESA", "UF", "NOME_PROPRIETARIO", "DATA_APREENSAO", "NOME_PATIO", "END_PATIO", "VALOR_ESTADIA", "SITE"
-			return new Object[]{car, owner, "MG", name, date, local, address, value, site};
-		}
-		catch(Exception ex){
-			if(Main.DEBUG)
-	    		ex.printStackTrace();
-			Platform.runLater(new Runnable() {
-				public void run() {
-		    		//Alert alert = new Alert(AlertType.NONE, "Não foi encontrado nenhum registro para a placa \""+car+"\"" , ButtonType.OK);
-		    		//alert.showAndWait();
-				}
-			});
-		}
+		
 		//Parse failed but results may be found
 		//return just the car and site
-		return new Object[]{car, "-", "-", "-", "-", "-", "-", "-", site};
+		return new Object[]{car, htmlString/*"Placa encontrada no site "+name+" --->"*/, site2};
+	}
+	
+	public void getIdThenConnect(List<String> cars, final int countDown){
+		//First check JSESSIONID and perform GET:
+		if(sessionId.isEmpty()){
+			String url = site;
+			BoundRequestBuilder request = prepareGet(url);
+			for(Map.Entry<String, String> entry : requestProperties.entrySet()){
+				request.addHeader(entry.getKey(), entry.getValue());
+	        }
+			request.setRequestTimeout(Statics.Connection.TIMEOUT);
+			request.execute(new AsyncCompletionHandler<Response>(){
+			    
+			    @Override
+			    public Response onCompleted(Response response) throws Exception{
+					//TODO: site is not working, always return the same initial page
+			    	List<String>values = response.getHeaders("Set-Cookie");
+			    	for(String v : values){
+		        		if(v.contains("JSESSIONID")){
+		        			String[] split = v.split("JSESSIONID=");
+		        			for(int i=0; split[1].charAt(i)!=';'; i++)
+		        				sessionId+=split[1].charAt(i);
+		        			if(Main.DEBUG)
+		        				System.out.println("JSESSIONID: "+sessionId);
+		        			for(String c:cars){
+		        				connect(c, Statics.Connection.ATTEMPTS);
+		        			}
+		        		}
+		        	}
+			        return response;
+			    }
+			    
+			    @Override
+			    public void onThrowable(Throwable t){
+			        if(countDown>1){
+				        if(Main.DEBUG)
+				        	System.out.println("TRP try again GET!");
+				        getIdThenConnect(cars, countDown-1);
+			        }
+			        else{
+				        if(Main.DEBUG)
+				        	System.out.println("TRP error GET!");
+			        }
+			    }
+			});
+		}
+		else{
+			for(String c:cars){
+				connect(c, Statics.Connection.ATTEMPTS);
+			}
+		}
 	}
 	
 	@Override
-	public void connect(final String car){
+	public void connect(final String car, final int countDown){
 		this.params = new HashMap<String, Object>();
 		this.params.put("javax.faces.partial.ajax", "true");
 		this.params.put("javax.faces.source", "j_idt64:j_idt91");
@@ -85,21 +109,59 @@ public class HtmlHandlerTRP extends IHtmlHandler{
 		this.params.put("j_idt64", "j_idt64");
 		this.params.put("j_idt64:j_idt87", car);
 		this.params.put("javax.faces.ViewState", "-6016496097231714323:1125612151544006923");
-		/*URL url;
 		try {
-			url = new URL(site);
-			//First execute a GET to get JSESSIONID:
-			String sessionId = GenericHttp.connect(url, "GET", new HashMap<String, String>(), new HashMap<String, Object>(), true);
-			this.requestProperties.put("Cookie", "JSESSIONID="+sessionId+"; SERVERID=gfprod03j8");
-			
-			String htmlString = GenericHttp.connect(url, "POST", requestProperties, params, false);
-			//Don't parse empty results:
-			if(htmlString.isEmpty() || htmlString.contains("Nenhum registro encontrado."))
-				return null;
-			return parse(htmlString);
+    		//Perform POST method with JSESSIONID:
+			try {
+				requestProperties.put("Cookie", "JSESSIONID="+sessionId+"; SERVERID=gfprod03j8");
+				String url = site;// GET = + "?" + urlWithParams();
+				BoundRequestBuilder request = preparePost(url);
+				for(Map.Entry<String, String> entry : requestProperties.entrySet()){
+					request.addHeader(entry.getKey(), entry.getValue());
+		        }
+				byte[] postDataBytes = urlWithParams().toString().getBytes("UTF-8");
+				request.setBody(postDataBytes);
+				request.setRequestTimeout(Statics.Connection.TIMEOUT);
+				request.execute(new AsyncCompletionHandler<Response>(){
+				    
+				    @Override
+				    public Response onCompleted(Response response) throws Exception{
+				    	if(response.getStatusCode()==200){
+    				    	String htmlString = new String(response.getResponseBodyAsBytes(), "UTF-8");
+    						if(htmlString.isEmpty() || htmlString.contains("Nenhum registro encontrado."))
+    							MainController.getInstance().receiveData(new Object[]{car, "", ""});
+    						else
+    							MainController.getInstance().receiveData(parse(htmlString, car));
+				    	}else{
+				    		connect(car, countDown-1);
+				    	}
+				        return response;
+				    }
+				    
+				    @Override
+				    public void onThrowable(Throwable t){
+				        if(countDown>1){
+					        if(Main.DEBUG)
+					        	System.out.println("TRP try again "+car);
+				        	connect(car, countDown-1);
+				        }
+				        else{
+					        if(Main.DEBUG)
+					        	System.out.println("TRP error "+car);
+					        MainController.getInstance().receiveData(new Object[]{car, "", ""});
+				        }
+				    }
+				});
+			} catch (Exception e) {
+				if(Main.DEBUG)
+					e.printStackTrace();
+				//Occurried some error before request:
+		        MainController.getInstance().receiveData(new Object[]{car, "", ""});
+			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			if(Main.DEBUG)
+				e.printStackTrace();
+			//Occurried some error before request:
+	        MainController.getInstance().receiveData(new Object[]{car, "", ""});
 		}
-		return null;*/
 	}
 }

@@ -47,97 +47,48 @@
                   <Insets left="10.0" />
                </padding>
             </HBox>
+            <Label prefHeight="200.0" text="ATENÇÃO:  Para evitar falhas em excesso e bloqueios nas consultas selecione apenas os sites que &#10;correspondem ao UF das placas (se necessário otimize a busca separando em arquivos diferentes &#10;placas de cada estado ou região)." textFill="#e1101a">
+               <VBox.margin>
+                  <Insets left="10.0" right="10.0" top="5.0" />
+               </VBox.margin>
+            </Label>
             <HBox spacing="10.0">
                <padding>
-                  <Insets left="10.0" top="20.0" />
+                  <Insets left="10.0" top="10.0" />
                </padding>
                <children>
-                  <CheckBox mnemonicParsing="false" prefWidth="115.0" selected="true" text="DETRAN-MG:" />
-                  <Hyperlink prefHeight="18.0" prefWidth="459.0" text="https://www.detran.mg.gov.br/veiculos/veiculos-apreendidos/lista-de-veiculos-apreendidos/-/lista_veiculos_apreendidos_furtados">
-                     <padding>
-                        <Insets top="-1.0" />
-                     </padding>
-                  </Hyperlink>
+                  <CheckBox fx:id="cbDMG" mnemonicParsing="false" prefWidth="115.0" selected="true" text="DETRAN-MG" />
+                  <CheckBox fx:id="cbPSP" mnemonicParsing="false" prefHeight="17.0" prefWidth="115.0" selected="false" text="PREFEITURA-SP" />
+                  <CheckBox fx:id="cbSPT" mnemonicParsing="false" prefWidth="115.0" selected="false" text="TRANS-SP" />
+                  <CheckBox fx:id="cbDPE" mnemonicParsing="false" prefWidth="115.0" selected="false" text="DETRAN-PE" />
                </children>
             </HBox>
             <HBox spacing="10.0">
-               <children>
-                  <CheckBox mnemonicParsing="false" prefHeight="17.0" prefWidth="115.0" selected="true" text="PREFEITURA-SP:" />
-                  <Hyperlink prefHeight="18.0" prefWidth="459.0" text="http://www3.prefeitura.sp.gov.br/smt/pesqveic/Pesquisa.aspx">
-                     <padding>
-                        <Insets top="-1.0" />
-                     </padding>
-                  </Hyperlink>
-               </children>
                <padding>
                   <Insets left="10.0" top="10.0" />
                </padding>
             </HBox>
             <HBox spacing="10.0">
-               <children>
-                  <CheckBox mnemonicParsing="false" prefWidth="115.0" selected="true" text="SP-TRANS:" />
-                  <Hyperlink prefHeight="18.0" prefWidth="459.0" text="http://www.sptrans.com.br/veiculos_apreendidos/">
-                     <padding>
-                        <Insets top="-1.0" />
-                     </padding>
-                  </Hyperlink>
-               </children>
                <padding>
                   <Insets left="10.0" top="10.0" />
                </padding>
+               <children>
+                  <CheckBox fx:id="cbTRP" mnemonicParsing="false" prefWidth="115.0" selected="false" text="RIB. PRETO-SP" />
+                  <CheckBox fx:id="cbSAN" mnemonicParsing="false" prefWidth="115.0" selected="false" text="SANTOS-SP" />
+                  <CheckBox fx:id="cbSAL" mnemonicParsing="false" prefWidth="115.0" selected="false" text="SALVADOR-BA" />
+                  <CheckBox fx:id="cbDPB" mnemonicParsing="false" prefWidth="115.0" selected="false" text="DETRAN-PB" />
+               </children>
             </HBox>
             <HBox spacing="10.0">
-               <children>
-                  <CheckBox mnemonicParsing="false" prefWidth="115.0" selected="true" text="DETRAN-PE:" />
-                  <Hyperlink prefHeight="18.0" prefWidth="459.0" text="http://www.detran.pe.gov.br/index.php?option=com_content&amp;view=article&amp;id=396&amp;Itemid=15">
-                     <padding>
-                        <Insets top="-1.0" />
-                     </padding>
-                  </Hyperlink>
-               </children>
                <padding>
                   <Insets left="10.0" top="10.0" />
                </padding>
             </HBox>
-            <HBox spacing="10.0">
-               <children>
-                  <CheckBox mnemonicParsing="false" prefWidth="115.0" selected="true" text="RIBEIRÃO PR:" />
-                  <Hyperlink prefHeight="18.0" prefWidth="459.0" text="http://www.coderp.com.br/JW07/veiculoPatio.xhtml">
-                     <padding>
-                        <Insets top="-1.0" />
-                     </padding>
-                  </Hyperlink>
-               </children>
-               <padding>
-                  <Insets left="10.0" top="10.0" />
-               </padding>
-            </HBox>
-            <HBox spacing="10.0">
-               <children>
-                  <CheckBox mnemonicParsing="false" prefWidth="115.0" selected="true" text="SANTOS:" />
-                  <Hyperlink prefHeight="18.0" prefWidth="459.0" text="http://www.vtx2.com.br/Patio/">
-                     <padding>
-                        <Insets top="-1.0" />
-                     </padding>
-                  </Hyperlink>
-               </children>
-               <padding>
-                  <Insets left="10.0" top="10.0" />
-               </padding>
-            </HBox>
-            <HBox spacing="10.0">
-               <children>
-                  <CheckBox mnemonicParsing="false" prefWidth="115.0" selected="true" text="DETRAN-BA:" />
-                  <Hyperlink prefHeight="18.0" prefWidth="459.0" text="http://www.transalvador.salvador.ba.gov.br/conteudo/index.php/veiculoApreendido/consultaPlaca">
-                     <padding>
-                        <Insets top="-1.0" />
-                     </padding>
-                  </Hyperlink>
-               </children>
-               <padding>
-                  <Insets left="10.0" top="10.0" />
-               </padding>
-            </HBox>
+            <TextArea fx:id="txtOut" prefHeight="200.0">
+               <VBox.margin>
+                  <Insets left="10.0" right="10.0" />
+               </VBox.margin>
+            </TextArea>
             <VBox alignment="TOP_CENTER" prefHeight="45.0" prefWidth="580.0">
                <children>
                   <Button fx:id="btnSearch" alignment="CENTER" mnemonicParsing="false" prefHeight="25.0" prefWidth="86.0" text="CONSULTAR" />
