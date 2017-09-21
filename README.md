@@ -1,4 +1,4 @@
-<img src="https://i.imgur.com/JPOzci4.png" alt="Self-Driving Car" width="500px">
+<img src="https://i.imgur.com/B41Gtk0.png" alt="Self-Driving Car" width="500px">
 
 # Search Car #
 Search Car is a robot to find seized vehicle localization and documentation debts.
